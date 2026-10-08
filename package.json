@@ -1,0 +1,30 @@
+{
+  "name": "@jany555/image-cli",
+  "version": "1.6.4",
+  "description": "CLI for image processing: convert, resize, crop, optimize, inspect, slice, webp, rmbg (AI background removal)",
+  "type": "module",
+  "bin": {
+    "image-cli": "./src/index.mjs"
+  },
+  "files": [
+    "src",
+    "skills/**/SKILL.md"
+  ],
+  "dependencies": {
+    "sharp": "^0.34.2",
+    "tinify": "^1.6.1",
+    "undici": "^7.28.0",
+    "update-notifier": "^7.3.1"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/jany55555/mys-skills.git"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}
