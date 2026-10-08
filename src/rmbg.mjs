@@ -3,9 +3,14 @@ import path from 'node:path'
 
 const SUPPORTED_EXTENSIONS = new Set(['.png', '.jpg', '.jpeg', '.webp'])
 
-function printUsage() {
+function printUsage(commandName = 'rmbg') {
+  const note = commandName === 'rmbg_lucida'
+    ? `Note: First run downloads egeorcun/lucida and caches it locally.
+Inference runs at 1024x1024 in float32. Requires Python with transformers, torchvision, and Pillow.`
+    : `Note: First run downloads the FeyNoBg model (~300MB) and caches it locally.
+Requires Python with nobg and loadimg installed: pip install nobg loadimg`
   console.log(`Usage:
-  image-cli rmbg <file-or-dir> [--recursive] [--replace] [--output-dir <dir>] [--dry-run]
+  image-cli ${commandName} <file-or-dir> [--recursive] [--replace] [--output-dir <dir>] [--dry-run]
 
 Options:
   --recursive         Recursively process directories
@@ -15,11 +20,10 @@ Options:
 
 Output: <name>_nobg.png alongside the source file (or in --output-dir)
 
-Note: First run downloads the FeyNoBg model (~300MB) and caches it locally.
-Requires Python with nobg and loadimg installed: pip install nobg loadimg`)
+${note}`)
 }
 
-function parseArgs(argv) {
+function parseArgs(argv, commandName = 'rmbg') {
   const options = {
     inputPath: '',
     recursive: false,
@@ -31,7 +35,7 @@ function parseArgs(argv) {
   const args = [...argv]
 
   if (!args.length || args[0] === '--help' || args[0] === '-h') {
-    printUsage()
+    printUsage(commandName)
     process.exit(0)
   }
 
@@ -40,9 +44,9 @@ function parseArgs(argv) {
   while (args.length > 0) {
     const arg = args.shift()
 
-    if (arg === '--recursive')  { options.recursive = true; continue }
-    if (arg === '--replace')    { options.replace = true;   continue }
-    if (arg === '--dry-run')    { options.dryRun = true;    continue }
+    if (arg === '--recursive') { options.recursive = true; continue }
+    if (arg === '--replace') { options.replace = true; continue }
+    if (arg === '--dry-run') { options.dryRun = true; continue }
 
     if (arg === '--output-dir') {
       const value = args.shift()
@@ -92,9 +96,9 @@ function getOutputPath(filePath, rootInputPath, outputDir) {
   return path.join(outputDir, normalizedDir, `${stem}.png`)
 }
 
-async function main(argv) {
+async function main(argv, commandName = 'rmbg') {
   try {
-    const options = parseArgs(argv)
+    const options = parseArgs(argv, commandName)
     const absoluteInputPath = path.resolve(options.inputPath)
     const inputStat = await fs.stat(absoluteInputPath)
     const rootInputPath = inputStat.isDirectory() ? absoluteInputPath : path.dirname(absoluteInputPath)
@@ -122,8 +126,10 @@ async function main(argv) {
       }
     } else {
       // Single Python subprocess handles all files — model loads once
-      const { removeBackgroundBatch } = await import('./feynobg.mjs')
-      const results = await removeBackgroundBatch(items)
+      const { removeBackgroundBatch, removeLucidaBackgroundBatch } = await import('./feynobg.mjs')
+      const results = commandName === 'rmbg_lucida'
+        ? await removeLucidaBackgroundBatch(items)
+        : await removeBackgroundBatch(items)
 
       for (const { inputPath, outputPath } of items) {
         if (results.err.has(inputPath)) {
@@ -147,9 +153,11 @@ async function main(argv) {
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err)
     console.error(message)
-    printUsage()
+    printUsage(commandName)
     process.exitCode = 1
   }
 }
 
-export function run(args) { main(args) }
+export function run(args, commandName = 'rmbg') {
+  return main(args, commandName)
+}

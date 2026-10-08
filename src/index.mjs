@@ -38,7 +38,8 @@ const COMMANDS = {
   optimize: runOptimize,
   inspect: runInspect,
   slice: runSlice,
-  rmbg: runRmbg,
+  rmbg: (args) => runRmbg(args, 'rmbg'),
+  rmbg_lucida: (args) => runRmbg(args, 'rmbg_lucida'),
   install: runInstall,
   update: runUpdate,
 }
@@ -56,9 +57,10 @@ Commands:
   optimize  Lossless optimize PNG/WebP (and optionally JPEG)
   inspect   Inspect image metadata
   slice     Slice sprite sheets into tiles
-  rmbg      Remove image background using AI (BiRefNet)
-  install   Install AI agent skills to ~/.claude/skills
-  update    Update image-cli to the latest version
+  rmbg         Remove image background using AI (BiRefNet)
+  rmbg_lucida  Remove image background using AI (Lucida)
+  install      Install AI agent skills to ~/.claude/skills
+  update       Update image-cli to the latest version
 
 Run \`image-cli <command> --help\` for command-specific options.`)
   process.exit(0)
